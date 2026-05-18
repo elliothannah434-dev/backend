@@ -30,7 +30,7 @@ def is_grayscale_xray(image_bgr: np.ndarray, threshold: float = 15.0):
     if max_diff > threshold:
         return (
             False,
-            f"Rejected: Input is likely a color image (Diff: {max_diff:.2f})",
+            f"Uploaded image is not an X-Ray Image.",
         )
 
     return True, "Passed: Image looks grayscale"

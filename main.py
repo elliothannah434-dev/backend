@@ -168,7 +168,7 @@ async def predict(file: UploadFile = File(...)):
     if gate_label != "xray":
         raise HTTPException(
             status_code=422,
-            detail={"reason": "Rejected by xray gate model", "gate_confidence": gate_conf},
+            detail={"reason": "Uploaded image is not an X-Ray Image.", "gate_confidence": gate_conf},
         )
 
     # Layer-3 main pathology inference

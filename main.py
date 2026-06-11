@@ -8,7 +8,8 @@ import uvicorn
 
 import tensorflow as tf
 
-from xray_validation import decode_imagefile_to_bgr, is_grayscale_xray
+from xray_validation import decode_imagefile_to_bgr
+
 
 
 # =======================
@@ -18,10 +19,10 @@ APP_TITLE = "X-Ray Classification API (TFLite)"
 MODEL_PATH = "model/model.tflite"
 IMG_SIZE = (224, 224)
 
-CLASS_NAMES = ["Normal", "Pneumonia", "Pneumothorax", "TB"]
+CLASS_NAMES = ['Normal', 'pneumonia', 'pneumothorax', 'tb']
 
 # ✅ Correct File ID from your Google Drive link (Layer 3 / main pathology model)
-FILE_ID = "15l9QCRs0OdlNAeZix6agNXgyH3qdWHnw"
+FILE_ID = "1Cwc_bXCbLJpaKcFHbIzPuww27rxUXI1B"
 
 # ✅ Correct File ID from your Google Drive link (Layer 2 / xray gate model)
 # URL: https://drive.google.com/file/d/1D4w4UwEISKyp_r3Tn3siBP5f2L20_e-J/view?usp=drive_link
@@ -131,15 +132,17 @@ async def predict(file: UploadFile = File(...)):
     # Read image bytes
     image_bytes = await file.read()
 
-    # Reject non-X-ray / color images using OpenCV heuristic
+
+    # decode step kept minimal; layer 1 (grayscale/color validation) skipped
     try:
-        img_bgr = decode_imagefile_to_bgr(image_bytes)
+        _ = decode_imagefile_to_bgr(image_bytes)
     except Exception:
         raise HTTPException(status_code=400, detail="Could not decode image")
 
-    is_xray, msg = is_grayscale_xray(img_bgr)
-    if not is_xray:
-        raise HTTPException(status_code=422, detail={"reason": msg})
+
+
+
+
 
     # Preprocess for TFLite model (PIL path)
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize(IMG_SIZE)
@@ -168,7 +171,7 @@ async def predict(file: UploadFile = File(...)):
     if gate_label != "xray":
         raise HTTPException(
             status_code=422,
-            detail={"reason": "Uploaded image is not an X-Ray Image.", "gate_confidence": gate_conf},
+            detail={"reason": "Rejected by xray gate model", "gate_confidence": gate_conf},
         )
 
     # Layer-3 main pathology inference
